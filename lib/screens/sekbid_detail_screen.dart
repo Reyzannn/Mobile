@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../models/sekbid_model.dart';
-import '../models/sekbid_detail_model.dart'; // IMPORT MODEL TERPISAH
+import '../models/sekbid_detail_model.dart';
 import '../utils/colors.dart';
 
 class SekbidDetailScreen extends StatefulWidget {
@@ -18,7 +18,6 @@ class _SekbidDetailScreenState extends State<SekbidDetailScreen> {
   @override
   void initState() {
     super.initState();
-    // Sekarang menggunakan model dari file terpisah
     sekbidDetail = SekbidDetail.getSampleDetail(widget.sekbid);
   }
 
@@ -72,8 +71,8 @@ class _SekbidDetailScreenState extends State<SekbidDetailScreen> {
             // Anggota
             _buildMembersSection(),
 
-            // Informasi tambahan
-            _buildAdditionalInfo(),
+            // Program Kerja (TAMBAHKAN INI)
+            _buildProgramKerjaSection(),
 
             const SizedBox(height: 40),
           ],
@@ -171,13 +170,13 @@ class _SekbidDetailScreenState extends State<SekbidDetailScreen> {
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Row(
         children: [
-          // Statistik Program Kerja
+          // Statistik Program Kerja - UPDATE INI
           Expanded(
             child: _buildStatItem(
               title: "Program Kerja",
-              value: widget.sekbid.programKerjaCount.toString(),
+              value: sekbidDetail.programKerja.length.toString(),
               icon: Icons.work,
-              color: widget.sekbid.programKerjaCount > 0
+              color: sekbidDetail.programKerja.isNotEmpty
                   ? AppColors.success
                   : AppColors.textSecondary,
             ),
@@ -370,7 +369,8 @@ class _SekbidDetailScreenState extends State<SekbidDetailScreen> {
     );
   }
 
-  Widget _buildAdditionalInfo() {
+  // TAMBAHKAN METHOD UNTUK PROGRAM KERJA
+  Widget _buildProgramKerjaSection() {
     return Container(
       margin: const EdgeInsets.all(16),
       padding: const EdgeInsets.all(16),
@@ -388,72 +388,150 @@ class _SekbidDetailScreenState extends State<SekbidDetailScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'Informasi Tambahan',
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-              color: AppColors.textPrimary,
-            ),
+          const Row(
+            children: [
+              Icon(Icons.work_outline, color: AppColors.primary, size: 20),
+              SizedBox(width: 8),
+              Text(
+                'Program Kerja',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.textPrimary,
+                ),
+              ),
+            ],
           ),
           const SizedBox(height: 12),
-          _buildInfoRow(
-            icon: Icons.date_range,
-            title: 'Tanggal Dibentuk',
-            value: _formatDate(sekbidDetail.tanggalDibentuk),
-          ),
-          const Divider(height: 20),
-          _buildInfoRow(
-            icon: Icons.category,
-            title: 'Jenis Rencana Kegiatan',
-            value: widget.sekbid.jenisRencanaKegiatan,
-          ),
-          const Divider(height: 20),
-          _buildInfoRow(
-            icon: Icons.badge,
-            title: 'Status',
-            value: 'Aktif',
-            valueColor: AppColors.success,
-          ),
+          
+          if (sekbidDetail.programKerja.isEmpty)
+            const Center(
+              child: Text(
+                'Belum ada program kerja',
+                style: TextStyle(
+                  color: Colors.grey,
+                  fontStyle: FontStyle.italic,
+                ),
+              ),
+            )
+          else
+            Column(
+              children: sekbidDetail.programKerja.map((program) {
+                return _buildProgramKerjaItem(program);
+              }).toList(),
+            ),
         ],
       ),
     );
   }
 
-  Widget _buildInfoRow({
-    required IconData icon,
-    required String title,
-    required String value,
-    Color? valueColor,
-  }) {
-    return Row(
-      children: [
-        Icon(icon, size: 20, color: AppColors.textSecondary),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                title,
-                style: const TextStyle(
-                  fontSize: 13,
-                  color: AppColors.textSecondary,
+  Widget _buildProgramKerjaItem(ProgramKerja program) {
+    // Warna berdasarkan status
+    Color getStatusColor(String status) {
+      switch (status.toLowerCase()) {
+        case 'selesai':
+          return Colors.green;
+        case 'berjalan':
+          return Colors.orange;
+        case 'rencana':
+          return Colors.blue;
+        default:
+          return Colors.grey;
+      }
+    }
+
+    return Card(
+      margin: const EdgeInsets.only(bottom: 12),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Expanded(
+                  child: Text(
+                    program.nama,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                 ),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: getStatusColor(program.status).withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(
+                      color: getStatusColor(program.status),
+                      width: 1,
+                    ),
+                  ),
+                  child: Text(
+                    program.status,
+                    style: TextStyle(
+                      color: getStatusColor(program.status),
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            
+            const SizedBox(height: 8),
+            
+            Text(
+              program.deskripsi,
+              style: const TextStyle(
+                fontSize: 14,
+                color: Colors.grey,
               ),
-              const SizedBox(height: 2),
-              Text(
-                value,
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  color: valueColor ?? AppColors.textPrimary,
+            ),
+            
+            const SizedBox(height: 12),
+            
+            // Timeline
+            Row(
+              children: [
+                const Icon(Icons.calendar_today, size: 16, color: Colors.grey),
+                const SizedBox(width: 8),
+                Text(
+                  '${_formatDate(program.tanggalMulai)} - ${_formatDate(program.tanggalSelesai)}',
+                  style: const TextStyle(
+                    fontSize: 13,
+                    color: Colors.grey,
+                  ),
                 ),
+              ],
+            ),
+            
+            if (program.status == 'Berjalan') ...[
+              const SizedBox(height: 12),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Progress: ${program.progress}%',
+                    style: const TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  LinearProgressIndicator(
+                    value: program.progress / 100,
+                    backgroundColor: Colors.grey[300],
+                    color: getStatusColor(program.status),
+                  ),
+                ],
               ),
             ],
-          ),
+          ],
         ),
-      ],
+      ),
     );
   }
 
@@ -476,7 +554,6 @@ class _SekbidDetailScreenState extends State<SekbidDetailScreen> {
   }
 
   void _shareSekbidInfo() {
-    // TODO: Implement share functionality
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
         content: Text('Berhasil membagikan informasi sekbid'),
@@ -485,21 +562,6 @@ class _SekbidDetailScreenState extends State<SekbidDetailScreen> {
   }
 
   String _formatDate(DateTime date) {
-    final months = [
-      'Januari',
-      'Februari',
-      'Maret',
-      'April',
-      'Mei',
-      'Juni',
-      'Juli',
-      'Agustus',
-      'September',
-      'Oktober',
-      'November',
-      'Desember'
-    ];
-
-    return '${date.day} ${months[date.month - 1]} ${date.year}';
+    return '${date.day}/${date.month}/${date.year}';
   }
 }

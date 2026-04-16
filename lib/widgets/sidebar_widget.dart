@@ -230,20 +230,17 @@ class SidebarWidget extends StatelessWidget {
         break;
       case 'proker':
         if (activeMenu != 'proker') {
-          // Navigator.pushReplacementNamed(parentContext, '/proker');
-          // TODO: Implement halaman Kelola Proker
+          Navigator.pushReplacementNamed(parentContext, '/proker');
         }
         break;
       case 'dokumentasi':
         if (activeMenu != 'dokumentasi') {
-          // Navigator.pushReplacementNamed(parentContext, '/dokumentasi');
-          // TODO: Implement halaman Dokumentasi
+          Navigator.pushReplacementNamed(parentContext, '/dokumentasi');
         }
         break;
       case 'kritik':
         if (activeMenu != 'kritik') {
-          // Navigator.pushReplacementNamed(parentContext, '/kritik');
-          // TODO: Implement halaman Kritik & Saran
+          Navigator.pushReplacementNamed(parentContext, '/kritik');
         }
         break;
       case 'logout':

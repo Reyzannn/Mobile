@@ -19,15 +19,15 @@ class Sekbid {
       // Baris 1: Seksidi 1 dan Seksidi 2
       Sekbid(
         id: 1,
-        title: "Muhutaman dan Mahajanan",
+        title: "Ketuhanan dan Ketaqwaan",
         programKerjaCount: 1,
         jenisRencanaKegiatan: "Hatır Denk Konto",
         rencanaKegiatanCount: 0,
       ),
       Sekbid(
         id: 2,
-        title: "Birhangi bir den koruygun",
-        programKerjaCount: 0,
+        title: "Berbangsa dan Bernegara",
+        programKerjaCount: 1,
         jenisRencanaKegiatan: "Önlem Adı Planları",
         rencanaKegiatanCount: 0,
       ),
@@ -35,14 +35,14 @@ class Sekbid {
       // Baris 2: Seksidi 3 dan Seksidi 4
       Sekbid(
         id: 3,
-        title: "Ulunan Doğrult",
+        title: "Literasi Digital",
         programKerjaCount: 0,
         jenisRencanaKegiatan: "Kurum Adı Planları",
         rencanaKegiatanCount: 0,
       ),
       Sekbid(
         id: 4,
-        title: "Politik dan kişi/enginim",
+        title: "Politik dan Kepemimpinan",
         programKerjaCount: 0,
         jenisRencanaKegiatan: "Sektis Adı Planları",
         rencanaKegiatanCount: 0,
@@ -51,14 +51,14 @@ class Sekbid {
       // Baris 3: Seksidi 5 dan Seksidi 6
       Sekbid(
         id: 5,
-        title: "Kevlusuzhanın",
+        title: "Kewirausahaan",
         programKerjaCount: 0,
         jenisRencanaKegiatan: "Önlem Adı Planları",
         rencanaKegiatanCount: 0,
       ),
       Sekbid(
         id: 6,
-        title: "Aprezisini Serir",
+        title: "Apresiasi Seni",
         programKerjaCount: 0,
         jenisRencanaKegiatan: "Kurum Adı Planları",
         rencanaKegiatanCount: 0,
@@ -67,14 +67,14 @@ class Sekbid {
       // Baris 4: Seksidi 7 dan Seksidi 8
       Sekbid(
         id: 7,
-        title: "Kerleştirilen İstihani dan Rahavi",
+        title: "Kesegaran Jasmani dan Rohani",
         programKerjaCount: 4,
         jenisRencanaKegiatan: "Hatır Denk Konto",
         rencanaKegiatanCount: 0,
       ),
       Sekbid(
         id: 8,
-        title: "Kepitibadan Birbuki Piktarlı Ulunu",
+        title: "Kepribadian Berbudi Pekerti Luhur",
         programKerjaCount: 0,
         jenisRencanaKegiatan: "Önlem Adı Planları",
         rencanaKegiatanCount: 0,
@@ -83,14 +83,14 @@ class Sekbid {
       // Baris 5: Seksidi 9 dan Seksidi 10
       Sekbid(
         id: 9,
-        title: "Kelezinim bilgiloruyor! Noğa",
+        title: "Kelestarian Lingkungan Hidup",
         programKerjaCount: 0,
         jenisRencanaKegiatan: "Kurum Adı Planları",
         rencanaKegiatanCount: 0,
       ),
       Sekbid(
         id: 10,
-        title: "Habitatyon Müayenlikleri",
+        title: "Hubungan Masyarakat",
         programKerjaCount: 0,
         jenisRencanaKegiatan: "Sektis Adı Planları",
         rencanaKegiatanCount: 0,

@@ -3,6 +3,9 @@ import 'screens/login_screen.dart';
 import 'screens/register_screen.dart';
 import 'screens/dashboard_screen.dart';
 import 'screens/sekbid_screen.dart';
+import 'screens/kelola_proker_screen.dart';
+import 'screens/dokumentasi_screen.dart'; 
+import 'screens/kritiksaran_screen.dart';
 import 'utils/colors.dart';
 
 void main() {
@@ -72,6 +75,9 @@ class MyApp extends StatelessWidget {
         '/register': (context) => const RegisterScreen(),
         '/dashboard': (context) => const DashboardScreen(),
         '/sekbid': (context) => const SekbidScreen(),
+        '/proker' : (context) => const KelolaProkerScreen(),
+        '/dokumentasi' : (context) => const DokumentasiScreen(),
+        '/kritik' : (context) => const KritikSaranScreen(),
       },
     );
   }
