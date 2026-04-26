@@ -134,6 +134,8 @@ class SekbidDetail {
 
 // TAMBAHKAN MODEL PROGRAM KERJA DI FILE YANG SAMA
 class ProgramKerja {
+  final int? id; // Tambahkan ID untuk update
+  final int? sekbidId; // Tambahkan sekbidId
   final String nama;
   final String deskripsi;
   final String status; // 'Rencana', 'Berjalan', 'Selesai'
@@ -142,6 +144,8 @@ class ProgramKerja {
   final int progress; // 0-100
 
   ProgramKerja({
+    this.id,
+    this.sekbidId,
     required this.nama,
     required this.deskripsi,
     required this.status,
@@ -149,4 +153,30 @@ class ProgramKerja {
     required this.tanggalSelesai,
     required this.progress,
   });
-}
+
+  factory ProgramKerja.fromJson(Map<String, dynamic> json) {
+    return ProgramKerja(
+      id: json['id'],
+      sekbidId: json['sekbid_id'],
+      nama: json['nama'] ?? '',
+      deskripsi: json['deskripsi'] ?? '',
+      status: json['status'] ?? 'Rencana',
+      tanggalMulai: DateTime.parse(json['tanggal_mulai'] ?? DateTime.now().toIso8601String()),
+      tanggalSelesai: DateTime.parse(json['tanggal_selesai'] ?? DateTime.now().toIso8601String()),
+      progress: json['progress'] ?? 0,
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      if (id != null) 'id': id,
+      'sekbid_id': sekbidId,
+      'nama': nama,
+      'deskripsi': deskripsi,
+      'status': status,
+      'tanggal_mulai': tanggalMulai.toIso8601String(),
+      'tanggal_selesai': tanggalSelesai.toIso8601String(),
+      'progress': progress,
+    };
+  }
+}

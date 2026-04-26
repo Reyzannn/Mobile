@@ -1,4 +1,7 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/sekbid_model.dart';
 import '../utils/colors.dart';
 import '../widgets/sidebar_widget.dart';
@@ -6,338 +9,191 @@ import 'sekbid_detail_screen.dart';
 
 class SekbidScreen extends StatefulWidget {
   const SekbidScreen({super.key});
-
   @override
   State<SekbidScreen> createState() => _SekbidScreenState();
 }
 
 class _SekbidScreenState extends State<SekbidScreen> {
-  List<Sekbid> sekbidList = [];
+  late Future<List<Sekbid>> _sekbidFuture;
 
   @override
   void initState() {
     super.initState();
-    sekbidList = Sekbid.getSampleData();
+    _sekbidFuture = _fetchSekbid();
+  }
+
+  Future<List<Sekbid>> _fetchSekbid() async {
+    // Menghitung jumlah proker secara otomatis menggunakan rpc atau join
+    final data = await Supabase.instance.client
+        .from('sekbid')
+        .select('*, program_kerja(count)')
+        .order('id', ascending: true);
+
+    return (data as List).map((json) => Sekbid.fromJson(json)).toList();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: AppColors.bg,
+      drawer: SidebarWidget(activeMenu: 'sekbid', parentContext: context),
+      extendBodyBehindAppBar: true,
       appBar: AppBar(
-        title: const Text(
-          'DAFTAR SEKBID OSIS',
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            fontSize: 18,
-            color: Colors.white,
+        backgroundColor: Colors.transparent,
+        flexibleSpace: ClipRect(
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+            child: Container(color: AppColors.bg.withValues(alpha: 0.5)),
           ),
         ),
-        centerTitle: true,
-        backgroundColor: AppColors.primary,
-        iconTheme: const IconThemeData(color: Colors.white),
-        leading: Builder(
-          builder: (BuildContext context) {
-            return IconButton(
-              icon: const Icon(Icons.menu),
-              onPressed: () {
-                Scaffold.of(context).openDrawer();
+        title: const Text('Daftar Sekbid'),
+      ),
+      body: Stack(
+        children: [
+          // Subtlest Warm Ambient Glow
+          Positioned(
+            top: 100,
+            left: -100,
+            child: Container(
+              width: 300,
+              height: 300,
+              decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: AppColors.primary.withValues(alpha: 0.04)),
+            ),
+          ),
+          Positioned.fill(
+            child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 100, sigmaY: 100),
+              child: Container(color: Colors.transparent),
+            ),
+          ),
+
+          SafeArea(
+            child: FutureBuilder<List<Sekbid>>(
+              future: _sekbidFuture,
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+                if (snapshot.hasError) {
+                  return Center(child: Text('Error: ${snapshot.error}'));
+                }
+                final list = snapshot.data ?? [];
+                if (list.isEmpty) {
+                  return const Center(child: Text('Tidak ada data sekbid'));
+                }
+                return ListView.builder(
+                  padding: const EdgeInsets.all(20),
+                  itemCount: list.length,
+                  itemBuilder: (ctx, i) => _SekbidTile(sekbid: list[i]),
+                );
               },
-            );
-          },
-        ),
-      ),
-      drawer: SidebarWidget(
-        activeMenu: 'sekbid',
-        parentContext: context,
-      ),
-      body: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildHeader(),
-            _buildSekbidGrid(),
-            const SizedBox(height: 20),
-          ],
-        ),
+            ),
+          ),
+        ],
       ),
     );
   }
+}
 
-  Widget _buildHeader() {
+class _SekbidTile extends StatelessWidget {
+  final Sekbid sekbid;
+  const _SekbidTile({required this.sekbid});
+
+  @override
+  Widget build(BuildContext context) {
+    final hasProker = sekbid.programKerjaCount > 0;
     return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(16),
+      margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
-        color: AppColors.cardBackground,
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.shadow,
-            blurRadius: 4,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  gradient: AppColors.primaryGradient,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: const Icon(
-                  Icons.groups_rounded,
-                  color: Colors.white,
-                  size: 24,
-                ),
-              ),
-              const SizedBox(width: 12),
-              const Expanded(
-                child: Text(
-                  '10 SEKSI BIDANG OSIS',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.textPrimary,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildSekbidGrid() {
-    // Bagi list menjadi chunks/pairs untuk 2 kolom
-    List<List<Sekbid>> chunkedList = [];
-    for (int i = 0; i < sekbidList.length; i += 2) {
-      int end = (i + 2 < sekbidList.length) ? i + 2 : sekbidList.length;
-      chunkedList.add(sekbidList.sublist(i, end));
-    }
-
-    return ListView.builder(
-      physics: const NeverScrollableScrollPhysics(),
-      shrinkWrap: true,
-      itemCount: chunkedList.length,
-      itemBuilder: (context, rowIndex) {
-        return _buildRow(chunkedList[rowIndex]);
-      },
-    );
-  }
-
-  Widget _buildRow(List<Sekbid> rowItems) {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      child: Row(
-        children: [
-          // Sekbid pertama di baris
-          Expanded(
-            child: _buildSekbidCard(rowItems[0]),
-          ),
-
-          const SizedBox(width: 12),
-
-          // Sekbid kedua di baris (jika ada)
-          if (rowItems.length > 1)
-            Expanded(
-              child: _buildSekbidCard(rowItems[1]),
-            )
-          else
-            const Expanded(child: SizedBox()),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildSekbidCard(Sekbid sekbid) {
-    return Container(
-      decoration: BoxDecoration(
-        color: AppColors.cardBackground,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.shadow,
-            blurRadius: 4,
-            offset: const Offset(0, 2),
-          ),
-        ],
+        color: AppColors.surfaceVariant.withValues(alpha: 0.4),
+        borderRadius: BorderRadius.circular(20),
         border: Border.all(color: AppColors.border),
       ),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            // Nomor SEKBID di tengah dengan kotak
-            Column(
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(20),
+          onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(
+                  builder: (_) => SekbidDetailScreen(sekbid: sekbid))),
+          child: Padding(
+            padding: const EdgeInsets.all(20),
+            child: Row(
               children: [
-                // Kotak nomor
                 Container(
-                  width: 60,
-                  height: 60,
+                  width: 56,
+                  height: 56,
                   decoration: BoxDecoration(
                     gradient: AppColors.primaryGradient,
-                    borderRadius: BorderRadius.circular(10),
+                    borderRadius: BorderRadius.circular(16),
                     boxShadow: [
                       BoxShadow(
-                        color: AppColors.primary.withOpacity(0.3),
-                        blurRadius: 6,
-                        offset: const Offset(0, 3),
-                      ),
+                          color: AppColors.primary.withValues(alpha: 0.4),
+                          blurRadius: 12,
+                          offset: const Offset(0, 4))
                     ],
                   ),
                   child: Center(
-                    child: Text(
-                      sekbid.id.toString(),
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                        fontSize: 28,
-                      ),
-                    ),
+                    child: Text('${sekbid.id}',
+                        style: GoogleFonts.outfit(
+                            fontSize: 24,
+                            fontWeight: FontWeight.w800,
+                            color: Colors.white)),
                   ),
                 ),
-                
-                const SizedBox(height: 8),
-                
-                // Label "SEKBID"
-                Text(
-                  "SEKBID",
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.primary,
-                    letterSpacing: 1,
-                  ),
-                ),
-              ],
-            ),
-
-            const SizedBox(height: 12),
-
-            // Judul Sekbid TANPA BACKGROUND
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8),
-              child: Text(
-                sekbid.title,
-                style: const TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.textPrimary,
-                  height: 1.4,
-                ),
-                textAlign: TextAlign.center,
-                maxLines: 3,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-
-            const SizedBox(height: 16),
-
-            // Container untuk Program Kerja
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
-              decoration: BoxDecoration(
-                color: Colors.grey[50],
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.grey[200]!),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.grey.withOpacity(0.1),
-                    blurRadius: 4,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Icon(
-                        Icons.work_outline,
-                        size: 16,
-                        color: sekbid.programKerjaCount > 0
-                            ? AppColors.success
-                            : Colors.grey[600],
-                      ),
-                      const SizedBox(width: 6),
-                      Text(
-                        "PROGRAM KERJA",
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: sekbid.programKerjaCount > 0
-                              ? AppColors.primary
-                              : Colors.grey[600],
-                          fontWeight: FontWeight.w600,
-                          letterSpacing: 0.5,
-                        ),
+                      Text(sekbid.title,
+                          style: GoogleFonts.outfit(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.textPrimary)),
+                      const SizedBox(height: 6),
+                      Row(
+                        children: [
+                          Icon(Icons.assignment_rounded,
+                              size: 14,
+                              color: hasProker
+                                  ? AppColors.primary
+                                  : AppColors.textMuted),
+                          const SizedBox(width: 6),
+                          Expanded(
+                            child: Text(
+                              hasProker
+                                  ? '${sekbid.programKerjaCount} Program Kerja'
+                                  : 'No Programs Yet',
+                              style: GoogleFonts.outfit(
+                                  fontSize: 13,
+                                  color: hasProker
+                                      ? AppColors.textSecondary
+                                      : AppColors.textMuted,
+                                  fontWeight: FontWeight.w600),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ),
-                  const SizedBox(height: 6),
-                  Text(
-                    sekbid.programKerjaCount.toString(),
-                    style: TextStyle(
-                      fontSize: 32,
-                      fontWeight: FontWeight.bold,
-                      color: sekbid.programKerjaCount > 0
-                          ? AppColors.success
-                          : Colors.grey[600],
-                      height: 1,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-            const SizedBox(height: 16),
-
-            // TOMBOL LIHAT DETAIL
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => SekbidDetailScreen(sekbid: sekbid),
-                    ),
-                  );
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primary,
-                  foregroundColor: Colors.white,
-                  elevation: 2,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  padding: const EdgeInsets.symmetric(vertical: 12),
-                  textStyle: const TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                  ),
                 ),
-                child: const Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text('Lihat Detail'),
-                    SizedBox(width: 6),
-                    Icon(Icons.arrow_forward, size: 14),
-                  ],
+                Container(
+                  width: 32,
+                  height: 32,
+                  decoration: BoxDecoration(
+                      color: AppColors.primary.withValues(alpha: 0.1),
+                      shape: BoxShape.circle),
+                  child: const Icon(Icons.arrow_forward_ios_rounded,
+                      color: AppColors.textSecondary, size: 14),
                 ),
-              ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );

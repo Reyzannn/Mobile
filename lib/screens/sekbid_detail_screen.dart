@@ -1,11 +1,14 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/sekbid_model.dart';
 import '../models/sekbid_detail_model.dart';
 import '../utils/colors.dart';
+import 'detail_proker_screen.dart';
 
 class SekbidDetailScreen extends StatefulWidget {
   final Sekbid sekbid;
-
   const SekbidDetailScreen({super.key, required this.sekbid});
 
   @override
@@ -13,555 +16,286 @@ class SekbidDetailScreen extends StatefulWidget {
 }
 
 class _SekbidDetailScreenState extends State<SekbidDetailScreen> {
-  late SekbidDetail sekbidDetail;
+  late Future<List<ProgramKerja>> _prokerFuture;
 
   @override
   void initState() {
     super.initState();
-    sekbidDetail = SekbidDetail.getSampleDetail(widget.sekbid);
+    _prokerFuture = _fetchProkers();
+  }
+
+  Future<List<ProgramKerja>> _fetchProkers() async {
+    final data = await Supabase.instance.client
+        .from('program_kerja')
+        .select()
+        .eq('sekbid_id', widget.sekbid.id)
+        .order('id', ascending: true);
+    return (data as List).map((json) => ProgramKerja.fromJson(json)).toList();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: AppColors.bg,
+      extendBodyBehindAppBar: true,
       appBar: AppBar(
-        title: Text(
-          'Detail Sekbid ${widget.sekbid.id}',
-          style: const TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
-          ),
+        backgroundColor: Colors.transparent,
+        flexibleSpace: ClipRect(
+          child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+              child: Container(color: AppColors.bg.withValues(alpha: 0.5))),
         ),
-        centerTitle: true,
+        title: Text('Sekbid ${widget.sekbid.id}'),
+      ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () async {
+          final refresh = await Navigator.pushNamed(
+            context,
+            '/proker',
+            arguments: widget.sekbid.id,
+          );
+          if (refresh == true) {
+            setState(() {
+              _prokerFuture = _fetchProkers();
+            });
+          }
+        },
         backgroundColor: AppColors.primary,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () => Navigator.pop(context),
-        ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.edit, color: Colors.white),
-            onPressed: () {
-              _showEditDialog();
-            },
-          ),
-          IconButton(
-            icon: const Icon(Icons.share, color: Colors.white),
-            onPressed: () {
-              _shareSekbidInfo();
-            },
-          ),
-        ],
+        icon: const Icon(Icons.add, color: Colors.white),
+        label: Text('Tambah Proker', style: GoogleFonts.outfit(color: Colors.white, fontWeight: FontWeight.bold)),
       ),
-      body: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Header dengan informasi utama
-            _buildHeaderCard(),
 
-            // Statistik
-            _buildStatsSection(),
 
-            // Deskripsi
-            _buildDescriptionSection(),
-
-            // Anggota
-            _buildMembersSection(),
-
-            // Program Kerja (TAMBAHKAN INI)
-            _buildProgramKerjaSection(),
-
-            const SizedBox(height: 40),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildHeaderCard() {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(20),
-      margin: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        gradient: AppColors.primaryGradient,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.primary.withOpacity(0.3),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Row(
+      body: Stack(
         children: [
-          // Nomor sekbid dalam circle
-          Container(
-            width: 70,
-            height: 70,
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(35),
-            ),
-            child: Center(
-              child: Text(
-                widget.sekbid.id.toString(),
-                style: TextStyle(
-                  fontSize: 32,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.primary,
-                ),
-              ),
+          // Subtlest Warm Ambient Glow
+          Positioned(
+            top: 0,
+            left: -50,
+            child: Container(
+              width: 300,
+              height: 300,
+              decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: AppColors.primary.withValues(alpha: 0.04)),
             ),
           ),
-
-          const SizedBox(width: 16),
-
-          // Informasi sekbid
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  "SEKSIDI ${widget.sekbid.id}",
-                  style: const TextStyle(
-                    fontSize: 14,
-                    color: Colors.white70,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  widget.sekbid.title,
-                  style: const TextStyle(
-                    fontSize: 18,
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Row(
-                  children: [
-                    const Icon(Icons.person, size: 16, color: Colors.white70),
-                    const SizedBox(width: 6),
-                    Text(
-                      sekbidDetail.ketua,
-                      style: const TextStyle(
-                        fontSize: 14,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ],
-                ),
-              ],
+          Positioned.fill(
+            child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 100, sigmaY: 100),
+              child: Container(color: Colors.transparent),
             ),
           ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildStatsSection() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: Row(
-        children: [
-          // Statistik Program Kerja - UPDATE INI
-          Expanded(
-            child: _buildStatItem(
-              title: "Program Kerja",
-              value: sekbidDetail.programKerja.length.toString(),
-              icon: Icons.work,
-              color: sekbidDetail.programKerja.isNotEmpty
-                  ? AppColors.success
-                  : AppColors.textSecondary,
-            ),
-          ),
-
-          const SizedBox(width: 12),
-
-          // Statistik Rencana Kegiatan
-          Expanded(
-            child: _buildStatItem(
-              title: "Rencana Kegiatan",
-              value: widget.sekbid.rencanaKegiatanCount.toString(),
-              icon: Icons.calendar_today,
-              color: widget.sekbid.rencanaKegiatanCount > 0
-                  ? AppColors.success
-                  : AppColors.textSecondary,
-            ),
-          ),
-
-          const SizedBox(width: 12),
-
-          // Statistik Anggota
-          Expanded(
-            child: _buildStatItem(
-              title: "Anggota",
-              value: sekbidDetail.anggota.length.toString(),
-              icon: Icons.group,
-              color: AppColors.secondary,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildStatItem({
-    required String title,
-    required String value,
-    required IconData icon,
-    required Color color,
-  }) {
-    return Card(
-      elevation: 2,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          children: [
-            Icon(icon, color: color, size: 24),
-            const SizedBox(height: 8),
-            Text(
-              value,
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-                color: color,
-              ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              title,
-              style: const TextStyle(
-                fontSize: 12,
-                color: AppColors.textSecondary,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildDescriptionSection() {
-    return Container(
-      margin: const EdgeInsets.all(16),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Row(
-            children: [
-              Icon(Icons.description, color: AppColors.primary, size: 20),
-              SizedBox(width: 8),
-              Text(
-                'Deskripsi Sekbid',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.textPrimary,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Text(
-            sekbidDetail.deskripsi,
-            style: const TextStyle(
-              fontSize: 14,
-              color: AppColors.textSecondary,
-              height: 1.5,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildMembersSection() {
-    return Container(
-      margin: const EdgeInsets.all(16),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Row(
-            children: [
-              Icon(Icons.group, color: AppColors.primary, size: 20),
-              SizedBox(width: 8),
-              Text(
-                'Anggota Sekbid',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.textPrimary,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Column(
-            children: sekbidDetail.anggota.map((anggota) {
-              return ListTile(
-                leading: CircleAvatar(
-                  backgroundColor: AppColors.primary.withOpacity(0.1),
-                  child: Text(
-                    anggota.substring(0, 1),
-                    style: TextStyle(
-                      color: AppColors.primary,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-                title: Text(
-                  anggota,
-                  style: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-                subtitle: Text(
-                  anggota.contains("Ketua") ? "Ketua Sekbid" : "Anggota",
-                  style: const TextStyle(
-                    fontSize: 12,
-                    color: AppColors.textSecondary,
-                  ),
-                ),
-                trailing: const Icon(Icons.chevron_right, size: 20),
-                onTap: () {
-                  // TODO: Navigasi ke profil anggota
-                },
-              );
-            }).toList(),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // TAMBAHKAN METHOD UNTUK PROGRAM KERJA
-  Widget _buildProgramKerjaSection() {
-    return Container(
-      margin: const EdgeInsets.all(16),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Row(
-            children: [
-              Icon(Icons.work_outline, color: AppColors.primary, size: 20),
-              SizedBox(width: 8),
-              Text(
-                'Program Kerja',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.textPrimary,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          
-          if (sekbidDetail.programKerja.isEmpty)
-            const Center(
-              child: Text(
-                'Belum ada program kerja',
-                style: TextStyle(
-                  color: Colors.grey,
-                  fontStyle: FontStyle.italic,
-                ),
-              ),
-            )
-          else
-            Column(
-              children: sekbidDetail.programKerja.map((program) {
-                return _buildProgramKerjaItem(program);
-              }).toList(),
-            ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildProgramKerjaItem(ProgramKerja program) {
-    // Warna berdasarkan status
-    Color getStatusColor(String status) {
-      switch (status.toLowerCase()) {
-        case 'selesai':
-          return Colors.green;
-        case 'berjalan':
-          return Colors.orange;
-        case 'rencana':
-          return Colors.blue;
-        default:
-          return Colors.grey;
-      }
-    }
-
-    return Card(
-      margin: const EdgeInsets.only(bottom: 12),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Expanded(
-                  child: Text(
-                    program.nama,
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: getStatusColor(program.status).withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(
-                      color: getStatusColor(program.status),
-                      width: 1,
-                    ),
-                  ),
-                  child: Text(
-                    program.status,
-                    style: TextStyle(
-                      color: getStatusColor(program.status),
-                      fontSize: 12,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            
-            const SizedBox(height: 8),
-            
-            Text(
-              program.deskripsi,
-              style: const TextStyle(
-                fontSize: 14,
-                color: Colors.grey,
-              ),
-            ),
-            
-            const SizedBox(height: 12),
-            
-            // Timeline
-            Row(
-              children: [
-                const Icon(Icons.calendar_today, size: 16, color: Colors.grey),
-                const SizedBox(width: 8),
-                Text(
-                  '${_formatDate(program.tanggalMulai)} - ${_formatDate(program.tanggalSelesai)}',
-                  style: const TextStyle(
-                    fontSize: 13,
-                    color: Colors.grey,
-                  ),
-                ),
-              ],
-            ),
-            
-            if (program.status == 'Berjalan') ...[
-              const SizedBox(height: 12),
-              Column(
+          SafeArea(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(24),
+              child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    'Progress: ${program.progress}%',
-                    style: const TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w500,
+                  // Header Card (Earthy Premium)
+                  Container(
+                    padding: const EdgeInsets.all(28),
+                    decoration: BoxDecoration(
+                      gradient: AppColors.primaryGradient,
+                      borderRadius: BorderRadius.circular(32),
+                      boxShadow: [
+                        BoxShadow(
+                            color: AppColors.primary.withValues(alpha: 0.2),
+                            blurRadius: 40,
+                            offset: const Offset(0, 15))
+                      ],
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('SEKBID ${widget.sekbid.id}',
+                            style: GoogleFonts.outfit(
+                                color: Colors.white.withValues(alpha: 0.9),
+                                fontSize: 13,
+                                fontWeight: FontWeight.w700,
+                                letterSpacing: 2)),
+                        const SizedBox(height: 8),
+                        Text(widget.sekbid.title,
+                            style: GoogleFonts.outfit(
+                                color: Colors.white,
+                                fontSize: 24,
+                                fontWeight: FontWeight.w800,
+                                height: 1.2)),
+                        const SizedBox(height: 16),
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Container(
+                                padding: const EdgeInsets.all(8),
+                                decoration: BoxDecoration(
+                                    color: Colors.white.withValues(alpha: 0.15),
+                                    shape: BoxShape.circle),
+                                child: const Icon(Icons.info_outline_rounded,
+                                    color: Colors.white, size: 16)),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Text(
+                                widget.sekbid.deskripsi ??
+                                    'Belum ada deskripsi untuk sekbid ini.',
+                                style: GoogleFonts.outfit(
+                                    color: Colors.white.withValues(alpha: 0.9),
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w400,
+                                    height: 1.5),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
                     ),
                   ),
-                  const SizedBox(height: 4),
-                  LinearProgressIndicator(
-                    value: program.progress / 100,
-                    backgroundColor: Colors.grey[300],
-                    color: getStatusColor(program.status),
+                  const SizedBox(height: 32),
+
+                  Text('Programs',
+                      style: GoogleFonts.outfit(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.textPrimary)),
+                  const SizedBox(height: 16),
+
+                  FutureBuilder<List<ProgramKerja>>(
+                    future: _prokerFuture,
+                    builder: (context, snapshot) {
+                      if (snapshot.connectionState == ConnectionState.waiting) {
+                        return const Center(child: CircularProgressIndicator());
+                      }
+                      if (snapshot.hasError) {
+                        return Center(child: Text('Error: ${snapshot.error}'));
+                      }
+                      final prokers = snapshot.data ?? [];
+
+                      if (prokers.isEmpty) {
+                        return Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.all(24),
+                          decoration: BoxDecoration(
+                              color: AppColors.surfaceVariant
+                                  .withValues(alpha: 0.4),
+                              borderRadius: BorderRadius.circular(20),
+                              border: Border.all(color: AppColors.border)),
+                          child: Center(
+                              child: Text('No Programs Available',
+                                  style: GoogleFonts.outfit(
+                                      color: AppColors.textMuted,
+                                      fontWeight: FontWeight.w500))),
+                        );
+                      }
+
+                      final mockDetail =
+                          SekbidDetail.getSampleDetail(widget.sekbid);
+
+                      return Column(
+                        children: prokers
+                            .map((p) =>
+                                _ProkerCard(p, widget.sekbid, mockDetail))
+                            .toList(),
+                      );
+                    },
                   ),
                 ],
               ),
-            ],
-          ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ProkerCard extends StatelessWidget {
+  final ProgramKerja p;
+  final Sekbid sekbid;
+  final SekbidDetail sekbidDetail;
+  const _ProkerCard(this.p, this.sekbid, this.sekbidDetail);
+
+  Color get _color => p.status == 'Selesai'
+      ? AppColors.success
+      : (p.status == 'Berjalan' ? AppColors.warning : AppColors.primaryLight);
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: AppColors.border.withValues(alpha: 0.8)),
+        boxShadow: [
+          BoxShadow(
+              color: Colors.black.withValues(alpha: 0.02),
+              blurRadius: 20,
+              offset: const Offset(0, 8))
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(24),
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => DetailProkerScreen(
+                  programKerja: p,
+                  sekbid: sekbid,
+                  sekbidDetail: sekbidDetail,
+                ),
+              ),
+            );
+          },
+          child: Padding(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                        child: Text(p.nama,
+                            style: GoogleFonts.outfit(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w700,
+                                color: AppColors.textPrimary))),
+                    Container(
+                      padding:
+                          const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      decoration: BoxDecoration(
+                          color: _color.withValues(alpha: 0.15),
+                          borderRadius: BorderRadius.circular(12)),
+                      child: Text(p.status,
+                          style: GoogleFonts.outfit(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w700,
+                              color: _color)),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Text(p.deskripsi,
+                    style: GoogleFonts.outfit(
+                        fontSize: 14, color: AppColors.textSecondary)),
+                if (p.status == 'Berjalan' || p.progress > 0) ...[
+                  const SizedBox(height: 16),
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(8),
+                    child: LinearProgressIndicator(
+                        value: p.progress / 100,
+                        backgroundColor: AppColors.primary.withValues(alpha: 0.1),
+                        color: _color,
+                        minHeight: 6),
+                  ),
+                ],
+              ],
+            ),
+          ),
         ),
       ),
     );
   }
-
-  void _showEditDialog() {
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: const Text('Edit Sekbid'),
-          content: const Text('Fitur edit akan tersedia segera.'),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('TUTUP'),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  void _shareSekbidInfo() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Berhasil membagikan informasi sekbid'),
-      ),
-    );
-  }
-
-  String _formatDate(DateTime date) {
-    return '${date.day}/${date.month}/${date.year}';
-  }
 }
+

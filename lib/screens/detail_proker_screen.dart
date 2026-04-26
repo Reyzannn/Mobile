@@ -1,4 +1,3 @@
-// File: lib/screens/detail_proker_screen.dart
 import 'package:flutter/material.dart';
 import '../models/sekbid_model.dart';
 import '../models/sekbid_detail_model.dart';
@@ -15,6 +14,7 @@ class DetailProkerScreen extends StatelessWidget {
     required this.sekbid,
     required this.sekbidDetail,
   });
+
 
   // WARNA MERAH OSIS
   static const Color merahOsis = Color(0xFFD32F2F);
@@ -76,7 +76,11 @@ class DetailProkerScreen extends StatelessWidget {
           IconButton(
             icon: const Icon(Icons.edit, color: Colors.white),
             onPressed: () {
-              // Navigasi ke halaman edit proker
+              Navigator.pushNamed(
+                context,
+                '/proker',
+                arguments: programKerja,
+              );
             },
           ),
           IconButton(
@@ -755,7 +759,13 @@ class DetailProkerScreen extends StatelessWidget {
                       const SizedBox(width: 16),
                       Expanded(
                         child: ElevatedButton.icon(
-                          onPressed: () {},
+                          onPressed: () {
+                            Navigator.pushNamed(
+                              context,
+                              '/proker',
+                              arguments: programKerja,
+                            );
+                          },
                           icon: const Icon(Icons.edit),
                           label: const Text('Edit Program'),
                           style: ElevatedButton.styleFrom(

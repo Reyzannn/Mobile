@@ -1,137 +1,108 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../utils/colors.dart';
+import '../utils/user_session.dart';
 
 class SidebarWidget extends StatelessWidget {
-  final String activeMenu; // Menu yang sedang aktif
+  final String activeMenu;
   final BuildContext parentContext;
 
-  const SidebarWidget({
-    super.key,
-    required this.activeMenu,
-    required this.parentContext,
-  });
+  const SidebarWidget({super.key, required this.activeMenu, required this.parentContext});
+
+  static const _menus = [
+    {'id': 'dashboard',   'label': 'Dashboard',       'icon': Icons.dashboard_customize_rounded},
+    {'id': 'sekbid',      'label': 'Daftar Sekbid',   'icon': Icons.hub_rounded},
+    {'id': 'proker',      'label': 'Kelola Proker',   'icon': Icons.rocket_launch_rounded},
+    {'id': 'dokumentasi', 'label': 'Dokumentasi',     'icon': Icons.photo_library_rounded},
+    {'id': 'kritik',      'label': 'Kritik & Saran',  'icon': Icons.forum_rounded},
+  ];
 
   @override
   Widget build(BuildContext context) {
     return Drawer(
-      child: ListView(
-        padding: EdgeInsets.zero,
+      width: 280,
+      backgroundColor: Colors.transparent,
+      child: Stack(
         children: [
-          // Header Sidebar dengan tanggal
-          _buildHeader(),
-
-          // Menu Dashboard
-          _buildDrawerItem(
-            icon: Icons.dashboard,
-            title: 'Dashboard',
-            menuId: 'dashboard',
-          ),
-
-          // Menu Sekbid
-          _buildDrawerItem(
-            icon: Icons.work,
-            title: 'Sekbid',
-            menuId: 'sekbid',
-          ),
-
-          // Menu Kelola Proker
-          _buildDrawerItem(
-            icon: Icons.group,
-            title: 'Kelola Proker',
-            menuId: 'proker',
-          ),
-
-          // Menu Dokumentasi
-          _buildDrawerItem(
-            icon: Icons.calendar_month,
-            title: 'Dokumentasi',
-            menuId: 'dokumentasi',
-          ),
-
-          // Menu Kritik & Saran
-          _buildDrawerItem(
-            icon: Icons.message,
-            title: 'Kritik & Saran',
-            menuId: 'kritik',
-          ),
-
-          const Divider(thickness: 1, height: 20),
-
-          // Menu Keluar
-          _buildDrawerItem(
-            icon: Icons.logout,
-            title: 'Keluar',
-            menuId: 'logout',
-          ),
-
-          // Footer
-          _buildFooter(),
-        ],
-      ),
-    );
-  }
-
-  // Header dengan profil dan tanggal
-  Widget _buildHeader() {
-    return Container(
-      height: 200,
-      decoration: BoxDecoration(
-        gradient: AppColors.primaryGradient,
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisAlignment: MainAxisAlignment.end,
-        children: [
-          const Padding(
-            padding: EdgeInsets.only(left: 20, bottom: 20),
-            child: CircleAvatar(
-              radius: 30,
-              backgroundColor: Colors.white,
-              child: Icon(
-                Icons.person,
-                size: 40,
-                color: AppColors.primary,
+          // Frost Glass Sidebar
+          ClipRect(
+            child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 30, sigmaY: 30),
+              child: Container(
+                decoration: BoxDecoration(
+                  color: AppColors.bg.withValues(alpha: 0.8),
+                  border: const Border(right: BorderSide(color: AppColors.border)),
+                ),
               ),
             ),
           ),
-          Padding(
-            padding: const EdgeInsets.only(left: 20, bottom: 16, right: 20),
+
+          SafeArea(
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  'Admin OSIS',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
+                // ── Modern Profile Header ────────────────────────────
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 56, height: 56,
+                        decoration: BoxDecoration(
+                          gradient: AppColors.primaryGradient,
+                          borderRadius: BorderRadius.circular(20),
+                          boxShadow: [BoxShadow(color: AppColors.primary.withValues(alpha: 0.3), blurRadius: 15, offset: const Offset(0, 6))],
+                        ),
+                        child: const Center(
+                          child: Text('A', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 24)),
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(UserSession.nama ?? 'User', style: GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.w800, color: AppColors.textPrimary)),
+                            Text('@${UserSession.username ?? 'user'}', style: GoogleFonts.outfit(fontSize: 10, color: AppColors.textSecondary, fontWeight: FontWeight.w700, letterSpacing: 1)),
+                          ],
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  'admin@osis.smktag.sch.id',
-                  style: TextStyle(
-                    color: Colors.white.withOpacity(0.8),
-                    fontSize: 14,
-                  ),
+                
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 24),
+                  child: Divider(color: AppColors.border, height: 1),
                 ),
                 const SizedBox(height: 16),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 6,
+
+                // ── Navigation ────────────────────────────────
+                Expanded(
+                  child: ListView(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    children: [
+                      for (final m in _menus)
+                        if (m['id'] != 'proker' || UserSession.isAdmin)
+                          _NavItem(
+                            icon: m['icon'] as IconData,
+                            label: m['label'] as String,
+                            active: activeMenu == m['id'],
+                            onTap: () => _navigate(m['id'] as String),
+                          ),
+                    ],
                   ),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.2),
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Text(
-                    _formatDate(DateTime.now()),
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w500,
-                    ),
+                ),
+
+                // ── Footer ────────────────────────────────────
+                Padding(
+                  padding: const EdgeInsets.all(24),
+                  child: _NavItem(
+                    icon: Icons.logout_rounded,
+                    label: 'Sign Out',
+                    active: false,
+                    danger: true,
+                    onTap: () => _navigate('logout'),
                   ),
                 ),
               ],
@@ -142,144 +113,78 @@ class SidebarWidget extends StatelessWidget {
     );
   }
 
-  // Item menu dalam sidebar
-  Widget _buildDrawerItem({
-    required IconData icon,
-    required String title,
-    required String menuId,
-  }) {
-    final isActive = activeMenu == menuId;
-
-    return Container(
-      color: isActive ? AppColors.primary.withOpacity(0.05) : null,
-      child: ListTile(
-        leading: Icon(
-          icon,
-          color: isActive ? AppColors.primary : Colors.grey[700],
-          size: 24,
-        ),
-        title: Text(
-          title,
-          style: TextStyle(
-            color: isActive ? AppColors.primary : AppColors.textPrimary,
-            fontWeight: isActive ? FontWeight.w600 : FontWeight.normal,
-            fontSize: 15,
-          ),
-        ),
-        trailing: isActive
-            ? Container(
-                width: 24,
-                height: 24,
-                decoration: BoxDecoration(
-                  color: AppColors.primary,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: const Icon(
-                  Icons.check,
-                  color: Colors.white,
-                  size: 16,
-                ),
-              )
-            : null,
-        onTap: () => _handleMenuTap(menuId),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(8),
-        ),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        dense: true,
-      ),
-    );
-  }
-
-  // Footer dengan versi aplikasi
-  Widget _buildFooter() {
-    return Padding(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        children: [
-          const SizedBox(height: 20),
-          Text(
-            'Sistem OSIS SMKTAG v1.0',
-            style: TextStyle(
-              fontSize: 12,
-              color: Colors.grey[600],
-            ),
-            textAlign: TextAlign.center,
-          ),
-        ],
-      ),
-    );
-  }
-
-  // Handle ketika menu di-tap
-  void _handleMenuTap(String menuId) {
-    // Tutup drawer terlebih dahulu
+  void _navigate(String id) {
     Navigator.pop(parentContext);
-
-    // Navigasi berdasarkan menu yang dipilih
-    switch (menuId) {
-      case 'dashboard':
-        if (activeMenu != 'dashboard') {
-          Navigator.pushReplacementNamed(parentContext, '/dashboard');
-        }
-        break;
-      case 'sekbid':
-        if (activeMenu != 'sekbid') {
-          Navigator.pushReplacementNamed(parentContext, '/sekbid');
-        }
-        break;
-      case 'proker':
-        if (activeMenu != 'proker') {
-          Navigator.pushReplacementNamed(parentContext, '/proker');
-        }
-        break;
-      case 'dokumentasi':
-        if (activeMenu != 'dokumentasi') {
-          Navigator.pushReplacementNamed(parentContext, '/dokumentasi');
-        }
-        break;
-      case 'kritik':
-        if (activeMenu != 'kritik') {
-          Navigator.pushReplacementNamed(parentContext, '/kritik');
-        }
-        break;
-      case 'logout':
-        Navigator.pushReplacementNamed(parentContext, '/login');
-        break;
+    switch (id) {
+      case 'dashboard':   if (activeMenu != id) Navigator.pushReplacementNamed(parentContext, '/dashboard'); break;
+      case 'sekbid':      if (activeMenu != id) Navigator.pushReplacementNamed(parentContext, '/sekbid'); break;
+      case 'proker':      if (activeMenu != id) Navigator.pushReplacementNamed(parentContext, '/proker'); break;
+      case 'dokumentasi': if (activeMenu != id) Navigator.pushReplacementNamed(parentContext, '/dokumentasi'); break;
+      case 'kritik':      if (activeMenu != id) Navigator.pushReplacementNamed(parentContext, '/kritik'); break;
+      case 'logout':      Navigator.pushReplacementNamed(parentContext, '/login'); break;
     }
   }
+}
 
-  // Format tanggal
-  String _formatDate(DateTime date) {
-    final days = [
-      'Minggu',
-      'Senin',
-      'Selasa',
-      'Rabu',
-      'Kamis',
-      'Jumat',
-      'Sabtu'
-    ];
-    final months = [
-      'Jan',
-      'Feb',
-      'Mar',
-      'Apr',
-      'Mei',
-      'Jun',
-      'Jul',
-      'Agu',
-      'Sep',
-      'Okt',
-      'Nov',
-      'Des'
-    ];
+class _NavItem extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final bool active;
+  final bool danger;
+  final VoidCallback onTap;
 
-    final dayName = days[date.weekday % 7];
-    final day = date.day.toString().padLeft(2, '0');
-    final month = months[date.month - 1];
-    final year = date.year.toString();
+  const _NavItem({
+    required this.icon, required this.label,
+    required this.active, required this.onTap,
+    this.danger = false,
+  });
 
-    return '$dayName, $day $month $year';
+  @override
+  Widget build(BuildContext context) {
+    final Color fg = danger ? AppColors.danger : (active ? AppColors.primary : AppColors.textSecondary);
+    final Color bg = active ? AppColors.primary.withValues(alpha: 0.1) : Colors.transparent;
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Material(
+        color: bg,
+        borderRadius: BorderRadius.circular(16),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(16),
+          onTap: onTap,
+          splashColor: AppColors.primary.withValues(alpha: 0.1),
+          highlightColor: Colors.transparent,
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            decoration: BoxDecoration(
+              border: Border.all(color: active ? AppColors.primary.withValues(alpha: 0.5) : Colors.transparent),
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Row(
+              children: [
+                Icon(icon, size: 22, color: fg),
+                const SizedBox(width: 16),
+                Text(label,
+                    style: GoogleFonts.outfit(
+                        fontSize: 15,
+                        fontWeight: active ? FontWeight.w600 : FontWeight.w500,
+                        color: fg)),
+                if (active) ...[
+                  const Spacer(),
+                  Container(
+                    width: 8, height: 8,
+                    decoration: BoxDecoration(
+                      color: AppColors.primary, 
+                      shape: BoxShape.circle,
+                      boxShadow: [BoxShadow(color: AppColors.primary.withValues(alpha: 0.5), blurRadius: 8)],
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
   }
 }

@@ -1,438 +1,284 @@
-// File: lib/screens/kritik_saran_screen.dart
+import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
+import '../utils/colors.dart';
 import '../widgets/sidebar_widget.dart';
 
-class KritikSaranScreen extends StatelessWidget {
+class KritikSaranScreen extends StatefulWidget {
   const KritikSaranScreen({super.key});
+  @override
+  State<KritikSaranScreen> createState() => _KritikSaranScreenState();
+}
 
-  // WARNA UTAMA (sesuaikan dengan tema aplikasi Anda)
-  static const Color warnaUtama = Color(0xFFD32F2F); // Merah OSIS
-  static const Color warnaMuda = Color(0xFFFFEBEE);
+class _KritikSaranScreenState extends State<KritikSaranScreen> with SingleTickerProviderStateMixin {
+  late TabController _tabController;
+  final _formKey = GlobalKey<FormState>();
+  final _kritikCtrl = TextEditingController();
+  String _selectedTarget = 'Sekbid 1';
+
+  @override
+  void initState() {
+    super.initState();
+    _tabController = TabController(length: 2, vsync: this);
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    _kritikCtrl.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.bg,
+      drawer: SidebarWidget(activeMenu: 'kritik', parentContext: context),
+      extendBodyBehindAppBar: true,
       appBar: AppBar(
-        title: const Text(
-          'KRITIK & SARAN DARI SISWA',
-          style: TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
-          ),
+        backgroundColor: Colors.transparent,
+        flexibleSpace: ClipRect(
+          child: BackdropFilter(filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10), child: Container(color: AppColors.bg.withValues(alpha: 0.5))),
         ),
-        centerTitle: true,
-        backgroundColor: warnaUtama,
-        elevation: 0,
-        leading: Builder(
-          builder: (context) => IconButton(
-            icon: const Icon(Icons.menu, color: Colors.white),
-            onPressed: () {
-              Scaffold.of(context).openDrawer();
-            },
-          ),
-        ),
-      ),
-      drawer: SidebarWidget(
-        activeMenu: 'kritik',
-        parentContext: context,
-      ),
-      body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // HEADER
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: warnaMuda,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Kritik & Saran Siswa SMKTAG',
-                      style: TextStyle(
-                        fontSize: 22,
-                        fontWeight: FontWeight.bold,
-                        color: warnaUtama,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      'Masukan dan feedback dari para siswa untuk kemajuan OSIS',
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Colors.grey[700],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 24),
-
-              // LIST HEADER
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    'Semua Kritik & Saran (12 masukan)',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black87,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-
-              // LIST KRITIK & SARAN
-              _buildKritikSaranCard(
-                nama: "Rayan Az'Ad Setiawan",
-                kelas: "X RPL 1",
-                tanggal: "21 Jan 2026 11:39",
-                sekbid: "Sekbid 1",
-                judul: "Mengadakan ngaji bersama",
-                kritik: "Kurang maksimal implementasi nya",
-                saran: "Lebih di optimalkan lagi",
-                balasan: [
-                  Balasan(
-                    pengirim: "OSIS",
-                    tanggal: "21 Jan 2026 11:42",
-                    isi:
-                        "Terimakasih atas kritik dan sarannya. Kami pastikan kedepannya bakal lebih baik lagi",
-                  ),
-                  Balasan(
-                    pengirim: "OSIS",
-                    tanggal: "22 Jan 2026 12:22",
-                    isi: "Okee baik, terimakasih",
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-
-              _buildKritikSaranCard(
-                nama: "Siti Aminah",
-                kelas: "XI TKJ 2",
-                tanggal: "20 Jan 2026 14:30",
-                sekbid: "Sekbid 3",
-                judul: "Perbaikan fasilitas perpustakaan",
-                kritik: "AC di perpustakaan sering mati",
-                saran: "Perlu maintenance rutin",
-                balasan: [
-                  Balasan(
-                    pengirim: "OSIS",
-                    tanggal: "21 Jan 2026 09:15",
-                    isi:
-                        "Sudah kami laporkan ke pihak sekolah. Terima kasih atas informasinya.",
-                  ),
-                ],
-              ),
-
-              // Tombol Load More
-              const SizedBox(height: 24),
-              Center(
-                child: TextButton(
-                  onPressed: () {},
-                  child: Text(
-                    'Muat lebih banyak...',
-                    style: TextStyle(
-                      color: warnaUtama,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildStatBox(
-      String label, String value, Color warnaUtama, Color warnaMuda) {
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: warnaMuda,
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Column(
-        children: [
-          Text(
-            value,
-            style: TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-              color: warnaUtama,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 12,
-              color: Colors.grey[600],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildKritikSaranCard({
-    required String nama,
-    required String kelas,
-    required String tanggal,
-    required String sekbid,
-    required String judul,
-    required String kritik,
-    required String saran,
-    required List<Balasan> balasan,
-  }) {
-    return Container(
-      width: double.infinity,
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-        border: Border.all(color: Colors.grey[200]!),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // HEADER - Info Pengirim
-            Row(
-              children: [
-                CircleAvatar(
-                  backgroundColor: warnaMuda,
-                  child: Icon(Icons.person, color: warnaUtama),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        nama,
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
-                          color: warnaUtama,
-                        ),
-                      ),
-                      Text(
-                        kelas,
-                        style: TextStyle(color: Colors.grey[600]),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-
-            // Tanggal & Sekbid
-            Row(
-              children: [
-                Text(
-                  tanggal,
-                  style: TextStyle(color: Colors.grey[600], fontSize: 12),
-                ),
-                const SizedBox(width: 8),
-                Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                  decoration: BoxDecoration(
-                    color: warnaMuda,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Text(
-                    sekbid,
-                    style: TextStyle(
-                      color: warnaUtama,
-                      fontSize: 12,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
-
-            // Judul
-            Text(
-              judul,
-              style: const TextStyle(
-                fontWeight: FontWeight.w600,
-                fontSize: 15,
-              ),
-            ),
-            const SizedBox(height: 12),
-
-            // Kritik
-            const Text(
-              "Kritik:",
-              style: TextStyle(fontWeight: FontWeight.w500),
-            ),
-            Text(kritik),
-            const SizedBox(height: 8),
-
-            // Saran
-            const Text(
-              "Saran:",
-              style: TextStyle(fontWeight: FontWeight.w500),
-            ),
-            Text(saran),
-            const SizedBox(height: 16),
-
-            // Balasan
-            if (balasan.isNotEmpty) ...[
-              const Divider(),
-              const Text(
-                "Balasan dari Pengurus OSIS",
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 14,
-                ),
-              ),
-              ...balasan.map((balasan) => Padding(
-                    padding: const EdgeInsets.only(top: 12),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Container(
-                              width: 24,
-                              height: 24,
-                              decoration: BoxDecoration(
-                                color: Colors.green[100],
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: const Icon(
-                                Icons.check_circle,
-                                size: 16,
-                                color: Colors.green,
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            Text(
-                              balasan.pengirim,
-                              style:
-                                  const TextStyle(fontWeight: FontWeight.w500),
-                            ),
-                          ],
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.only(left: 32),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                balasan.tanggal,
-                                style: TextStyle(
-                                    color: Colors.grey[600], fontSize: 11),
-                              ),
-                              const SizedBox(height: 4),
-                              Text(balasan.isi),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  )),
-            ],
-
-            // Input Balasan
-            const SizedBox(height: 16),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              decoration: BoxDecoration(
-                border: Border.all(color: Colors.grey[300]!),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      "Tulis balasan...",
-                      style: TextStyle(color: Colors.grey[500]),
-                    ),
-                  ),
-                  Icon(Icons.send, color: warnaUtama),
-                ],
-              ),
-            ),
-
-            // Tombol Aksi
-            const SizedBox(height: 16),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                SizedBox(
-                  width: 100,
-                  child: TextButton(
-                    onPressed: () {},
-                    child: Text(
-                      'Tandai Selesai',
-                      style: TextStyle(
-                        color: warnaUtama,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                SizedBox(
-                  width: 80,
-                  child: ElevatedButton(
-                    onPressed: () {},
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: warnaUtama,
-                      padding: const EdgeInsets.symmetric(vertical: 8),
-                    ),
-                    child: const Text(
-                      'Balas',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
+        title: Text('Kritik & Saran', style: GoogleFonts.outfit(fontWeight: FontWeight.w800)),
+        bottom: TabBar(
+          controller: _tabController,
+          labelColor: AppColors.primary,
+          unselectedLabelColor: AppColors.textSecondary,
+          indicatorColor: AppColors.primary,
+          indicatorSize: TabBarIndicatorSize.label,
+          tabs: const [
+            Tab(text: 'Kirim Masukan'),
+            Tab(text: 'Kotak Masuk'),
           ],
+        ),
+      ),
+      body: Stack(
+        children: [
+          Positioned(top: 200, right: -100, child: Container(width: 400, height: 400, decoration: BoxDecoration(shape: BoxShape.circle, color: AppColors.primary.withValues(alpha: 0.04)))),
+          Positioned.fill(child: BackdropFilter(filter: ImageFilter.blur(sigmaX: 120, sigmaY: 120), child: Container(color: Colors.transparent))),
+
+          SafeArea(
+            child: TabBarView(
+              controller: _tabController,
+              children: [
+                _buildUserView(),
+                _buildAdminView(),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildUserView() {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(28),
+            decoration: BoxDecoration(
+              color: AppColors.surface,
+              borderRadius: BorderRadius.circular(32),
+              border: Border.all(color: AppColors.border),
+              boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 40, offset: const Offset(0, 10))],
+            ),
+            child: Form(
+              key: _formKey,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Beri Masukan', style: GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.w800, color: AppColors.textPrimary)),
+                  const SizedBox(height: 8),
+                  Text('Masukan Anda membantu kami menjadi lebih baik.', style: GoogleFonts.outfit(fontSize: 13, color: AppColors.textSecondary)),
+                  const SizedBox(height: 32),
+
+                  Text('Target Masukan', style: _labelStyle()),
+                  _buildDropdown(),
+                  const SizedBox(height: 20),
+
+                  Text('Isi Kritik & Saran', style: _labelStyle()),
+                  TextFormField(
+                    controller: _kritikCtrl,
+                    maxLines: 5,
+                    decoration: const InputDecoration(hintText: 'Tuliskan masukan Anda di sini...'),
+                    validator: (v) => v!.isEmpty ? 'Wajib diisi' : null,
+                  ),
+                  const SizedBox(height: 32),
+
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: () {
+                        if (_formKey.currentState!.validate()) {
+                          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Terima kasih! Masukan telah dikirim.')));
+                          _kritikCtrl.clear();
+                        }
+                      },
+                      child: const Text('KIRIM MASUKAN'),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 32),
+          Text('Masukan Saya', style: GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.w800, color: AppColors.textPrimary)),
+          const SizedBox(height: 16),
+          _KritikCard(
+            nama: 'Saya',
+            tanggal: 'Hari ini',
+            target: 'Sekbid 1',
+            isi: 'Mohon untuk dokumentasi proker lebih dipercepat unggahnya.',
+            isUserOwn: true,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAdminView() {
+    return ListView(
+      padding: const EdgeInsets.all(24),
+      children: [
+        Row(
+          children: [
+            Text('Semua Masukan', style: GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.w800, color: AppColors.textPrimary)),
+            const Spacer(),
+            Icon(Icons.filter_list_rounded, color: AppColors.textSecondary, size: 20),
+          ],
+        ),
+        const SizedBox(height: 20),
+        _KritikCard(
+          nama: "Rayan Az'Ad",
+          tanggal: '21 Jan 2026',
+          target: 'Proker LDKS',
+          isi: 'Implementasi proker kemarin kurang maksimal di bagian konsumsi.',
+          balasan: 'Terima kasih atas masukannya, akan kami evaluasi.',
+          isAdmin: true,
+        ),
+        _KritikCard(
+          nama: "Budi Santoso",
+          tanggal: '19 Jan 2026',
+          target: 'Sekbid 4',
+          isi: 'Kapan ada lomba kebersihan kelas lagi?',
+          isAdmin: true,
+        ),
+      ],
+    );
+  }
+
+  TextStyle _labelStyle() => GoogleFonts.outfit(fontSize: 12, color: AppColors.textSecondary, fontWeight: FontWeight.w700, letterSpacing: 0.5);
+
+  Widget _buildDropdown() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      decoration: BoxDecoration(color: AppColors.surfaceVariant.withValues(alpha: 0.5), borderRadius: BorderRadius.circular(20), border: Border.all(color: AppColors.border)),
+      child: DropdownButtonHideUnderline(
+        child: DropdownButton<String>(
+          value: _selectedTarget,
+          isExpanded: true,
+          icon: const Icon(Icons.expand_more_rounded, color: AppColors.textMuted),
+          items: ['Sekbid 1', 'Sekbid 2', 'Proker LDKS', 'Proker HUT RI'].map((e) => DropdownMenuItem(value: e, child: Text(e, style: GoogleFonts.outfit(fontSize: 14, color: AppColors.textPrimary)))).toList(),
+          onChanged: (v) => setState(() => _selectedTarget = v!),
         ),
       ),
     );
   }
 }
 
-// Model untuk balasan (letakkan di file terpisah atau di bawah class)
-class Balasan {
-  final String pengirim;
-  final String tanggal;
-  final String isi;
+class _KritikCard extends StatelessWidget {
+  final String nama, tanggal, target, isi;
+  final String? balasan;
+  final bool isAdmin, isUserOwn;
 
-  Balasan({
-    required this.pengirim,
-    required this.tanggal,
-    required this.isi,
-  });
+  const _KritikCard({required this.nama, required this.tanggal, required this.target, required this.isi, this.balasan, this.isAdmin = false, this.isUserOwn = false});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(28),
+        border: Border.all(color: AppColors.border.withValues(alpha: 0.8)),
+        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.01), blurRadius: 20, offset: const Offset(0, 8))],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 44, height: 44,
+                decoration: BoxDecoration(color: AppColors.primary.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(14)),
+                child: Center(child: Text(nama[0], style: GoogleFonts.outfit(color: AppColors.primary, fontWeight: FontWeight.w800, fontSize: 18))),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(nama, style: GoogleFonts.outfit(fontSize: 15, fontWeight: FontWeight.w700, color: AppColors.textPrimary)),
+                    Text('$tanggal • Target: $target', style: GoogleFonts.outfit(fontSize: 11, color: AppColors.textSecondary, fontWeight: FontWeight.w500)),
+                  ],
+                ),
+              ),
+              if (isUserOwn || (isAdmin && balasan != null))
+                PopupMenuButton(
+                  icon: Icon(Icons.more_vert_rounded, color: AppColors.textMuted, size: 20),
+                  itemBuilder: (_) => [
+                    PopupMenuItem(child: Row(children: [Icon(Icons.edit_outlined, size: 18, color: AppColors.textSecondary), const SizedBox(width: 10), const Text('Edit')])),
+                    PopupMenuItem(child: Row(children: [Icon(Icons.delete_outline_rounded, size: 18, color: AppColors.danger), const SizedBox(width: 10), Text('Delete', style: TextStyle(color: AppColors.danger))])),
+                  ],
+                ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Text(isi, style: GoogleFonts.outfit(fontSize: 14, color: AppColors.textPrimary, height: 1.5)),
+          
+          if (balasan != null) ...[
+            const SizedBox(height: 20),
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(color: AppColors.surfaceVariant.withValues(alpha: 0.5), borderRadius: BorderRadius.circular(20), border: Border.all(color: AppColors.border.withValues(alpha: 0.5))),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      const Icon(Icons.reply_rounded, size: 16, color: AppColors.primary),
+                      const SizedBox(width: 8),
+                      Text('Balasan OSIS', style: GoogleFonts.outfit(fontSize: 12, fontWeight: FontWeight.w800, color: AppColors.primary)),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Text(balasan!, style: GoogleFonts.outfit(fontSize: 13, color: AppColors.textSecondary, height: 1.4)),
+                ],
+              ),
+            ),
+          ] else if (isAdmin) ...[
+            const SizedBox(height: 20),
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton.icon(
+                onPressed: () {},
+                icon: const Icon(Icons.reply_rounded, size: 18),
+                label: const Text('BALAS KRITIK'),
+                style: OutlinedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  side: const BorderSide(color: AppColors.primary),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                ),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
 }
