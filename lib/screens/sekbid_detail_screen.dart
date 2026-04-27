@@ -6,6 +6,7 @@ import '../models/sekbid_model.dart';
 import '../models/sekbid_detail_model.dart';
 import '../utils/colors.dart';
 import 'detail_proker_screen.dart';
+import 'kelola_proker_screen.dart';
 
 class SekbidDetailScreen extends StatefulWidget {
   final Sekbid sekbid;
@@ -49,10 +50,11 @@ class _SekbidDetailScreenState extends State<SekbidDetailScreen> {
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () async {
-          final refresh = await Navigator.pushNamed(
+          final refresh = await Navigator.push(
             context,
-            '/proker',
-            arguments: widget.sekbid.id,
+            MaterialPageRoute(
+              builder: (_) => KelolaProkerScreen(preSelectedSekbidId: widget.sekbid.id),
+            ),
           );
           if (refresh == true) {
             setState(() {
@@ -213,9 +215,9 @@ class _ProkerCard extends StatelessWidget {
   final SekbidDetail sekbidDetail;
   const _ProkerCard(this.p, this.sekbid, this.sekbidDetail);
 
-  Color get _color => p.status == 'Selesai'
+  Color get _color => p.status.toLowerCase() == 'selesai'
       ? AppColors.success
-      : (p.status == 'Berjalan' ? AppColors.warning : AppColors.primaryLight);
+      : (p.status.toLowerCase() == 'berjalan' ? AppColors.warning : AppColors.primaryLight);
 
   @override
   Widget build(BuildContext context) {
@@ -279,7 +281,7 @@ class _ProkerCard extends StatelessWidget {
                 Text(p.deskripsi,
                     style: GoogleFonts.outfit(
                         fontSize: 14, color: AppColors.textSecondary)),
-                if (p.status == 'Berjalan' || p.progress > 0) ...[
+                if (p.status.toLowerCase() == 'berjalan' || p.progress > 0) ...[
                   const SizedBox(height: 16),
                   ClipRRect(
                     borderRadius: BorderRadius.circular(8),

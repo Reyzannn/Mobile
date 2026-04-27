@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../models/sekbid_model.dart';
 import '../models/sekbid_detail_model.dart';
 import '../widgets/sidebar_widget.dart';
+import 'kelola_proker_screen.dart';
 
 class DetailProkerScreen extends StatelessWidget {
   final ProgramKerja programKerja;
@@ -76,10 +77,11 @@ class DetailProkerScreen extends StatelessWidget {
           IconButton(
             icon: const Icon(Icons.edit, color: Colors.white),
             onPressed: () {
-              Navigator.pushNamed(
+              Navigator.push(
                 context,
-                '/proker',
-                arguments: programKerja,
+                MaterialPageRoute(
+                  builder: (_) => KelolaProkerScreen(initialProker: programKerja),
+                ),
               );
             },
           ),
@@ -267,24 +269,11 @@ class DetailProkerScreen extends StatelessWidget {
                       padding: const EdgeInsets.all(20),
                       child: Column(
                         children: [
-                          // Waktu Mulai
                           _buildInfoRow(
                             icon: Icons.calendar_today,
                             iconColor: merahOsis,
-                            label: 'Tanggal Mulai',
-                            value: _formatDate(programKerja.tanggalMulai),
-                          ),
-                          const Padding(
-                            padding: EdgeInsets.symmetric(vertical: 12),
-                            child: Divider(height: 1),
-                          ),
-                          
-                          // Waktu Selesai
-                          _buildInfoRow(
-                            icon: Icons.calendar_today,
-                            iconColor: merahOsis,
-                            label: 'Tanggal Selesai',
-                            value: _formatDate(programKerja.tanggalSelesai),
+                            label: 'Tanggal',
+                            value: '${_formatDate(programKerja.tanggalMulai)} - ${_formatDate(programKerja.tanggalSelesai)}',
                           ),
                           const Padding(
                             padding: EdgeInsets.symmetric(vertical: 12),

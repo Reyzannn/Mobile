@@ -1,11 +1,14 @@
+import 'dart:typed_data';
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/sekbid_model.dart';
 import '../models/sekbid_detail_model.dart';
+import '../services/image_picker.dart';
 import '../utils/colors.dart';
 import '../widgets/sidebar_widget.dart';
+import 'sekbid_detail_screen.dart';
 
 class KelolaProkerScreen extends StatefulWidget {
   final ProgramKerja? initialProker;
@@ -21,7 +24,6 @@ class _KelolaProkerScreenState extends State<KelolaProkerScreen> {
   final _formKey = GlobalKey<FormState>();
   final _namaCtrl = TextEditingController();
   final _deskripsiCtrl = TextEditingController();
-  final _progressCtrl = TextEditingController(text: '0');
 
   List<Sekbid> _sekbidList = [];
   Sekbid? _selectedSekbid;
@@ -29,6 +31,8 @@ class _KelolaProkerScreenState extends State<KelolaProkerScreen> {
   DateTime? _endDate;
   String _selectedStatus = 'Perencanaan';
   bool _isLoading = false;
+  final ImagePickerService _imagePickerService = ImagePickerService();
+  Uint8List? _selectedImageData;
 
   @override
   void initState() {
@@ -38,7 +42,6 @@ class _KelolaProkerScreenState extends State<KelolaProkerScreen> {
       final p = widget.initialProker!;
       _namaCtrl.text = p.nama;
       _deskripsiCtrl.text = p.deskripsi;
-      _progressCtrl.text = p.progress.toString();
       _startDate = p.tanggalMulai;
       _endDate = p.tanggalSelesai;
       _selectedStatus = p.status;
@@ -70,7 +73,12 @@ class _KelolaProkerScreenState extends State<KelolaProkerScreen> {
 
   @override
   void dispose() {
-    for (final c in [_namaCtrl, _deskripsiCtrl, _progressCtrl]) c.dispose();
+    for (final c in [
+      _namaCtrl,
+      _deskripsiCtrl,
+    ]) {
+      c.dispose();
+    }
     super.dispose();
   }
 
@@ -96,7 +104,7 @@ class _KelolaProkerScreenState extends State<KelolaProkerScreen> {
         status: _selectedStatus,
         tanggalMulai: _startDate!,
         tanggalSelesai: _endDate!,
-        progress: int.tryParse(_progressCtrl.text) ?? 0,
+        progress: widget.initialProker?.progress ?? 0,
       );
 
       if (widget.initialProker?.id == null) {
@@ -121,7 +129,22 @@ class _KelolaProkerScreenState extends State<KelolaProkerScreen> {
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       ));
-      Navigator.pop(context, true);
+
+      // Jika dibuka dari SekbidDetailScreen (preSelectedSekbidId ada), pop saja biar kembali ke detail
+      if (widget.preSelectedSekbidId != null) {
+        Navigator.pop(context, true);
+      }
+      // Jika form add baru (initialProker == null) dan dibuka dari sidebar, arahkan ke detail sekbid yg ditambah
+      else if (widget.initialProker == null && _selectedSekbid != null) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => SekbidDetailScreen(sekbid: _selectedSekbid!)),
+        );
+      }
+      // Jika edit, pop biasa
+      else {
+        Navigator.pop(context, true);
+      }
     } catch (e) {
       _err('Gagal menyimpan: $e');
     } finally {
@@ -156,6 +179,13 @@ class _KelolaProkerScreenState extends State<KelolaProkerScreen> {
       lastDate: DateTime(2030),
     );
     if (picked != null) setState(() => _endDate = picked);
+  }
+
+  Future<void> _pickPhoto() async {
+    final photoData = await _imagePickerService.pickImageFromGallery();
+    if (photoData != null) {
+      setState(() => _selectedImageData = photoData);
+    }
   }
 
   void _pickSekbid() {
@@ -290,6 +320,40 @@ class _KelolaProkerScreenState extends State<KelolaProkerScreen> {
                             onTap: _pickSekbid,
                           ),
                           const SizedBox(height: 20),
+                          _FieldLabel('Foto Proker'),
+                          GestureDetector(
+                            onTap: _pickPhoto,
+                            child: Container(
+                              width: double.infinity,
+                              height: 160,
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(20),
+                                border: Border.all(color: AppColors.border),
+                                color: AppColors.surfaceVariant,
+                              ),
+                              child: _selectedImageData == null
+                                  ? Center(
+                                      child: Column(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          const Icon(Icons.photo_camera_rounded,
+                                              color: Colors.grey, size: 32),
+                                          const SizedBox(height: 8),
+                                          Text('Pilih foto proker',
+                                              style: GoogleFonts.outfit(
+                                                  color:
+                                                      AppColors.textSecondary)),
+                                        ],
+                                      ),
+                                    )
+                                  : ClipRRect(
+                                      borderRadius: BorderRadius.circular(20),
+                                      child: Image.memory(_selectedImageData!,
+                                          fit: BoxFit.cover),
+                                    ),
+                            ),
+                          ),
+                          const SizedBox(height: 20),
                           _FieldLabel('Nama Program'),
                           TextFormField(
                             controller: _namaCtrl,
@@ -348,42 +412,14 @@ class _KelolaProkerScreenState extends State<KelolaProkerScreen> {
                             ],
                           ),
                           const SizedBox(height: 20),
-                          Row(
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    _FieldLabel('Status'),
-                                    _StatusPicker(
-                                      current: _selectedStatus,
-                                      onChanged: (v) =>
-                                          setState(() => _selectedStatus = v),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              const SizedBox(width: 16),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    _FieldLabel('Progress (%)'),
-                                    TextFormField(
-                                      controller: _progressCtrl,
-                                      keyboardType: TextInputType.number,
-                                      decoration: const InputDecoration(
-                                          hintText: '0-100'),
-                                      validator: (v) {
-                                        if (v!.isEmpty) return 'Wajib';
-                                        final n = int.tryParse(v);
-                                        if (n == null || n < 0 || n > 100)
-                                          return '0-100';
-                                        return null;
-                                      },
-                                    ),
-                                  ],
-                                ),
+                              _FieldLabel('Status'),
+                              _StatusPicker(
+                                current: _selectedStatus,
+                                onChanged: (v) =>
+                                    setState(() => _selectedStatus = v),
                               ),
                             ],
                           ),

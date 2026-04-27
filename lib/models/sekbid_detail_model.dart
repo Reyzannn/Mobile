@@ -160,11 +160,39 @@ class ProgramKerja {
       sekbidId: json['sekbid_id'],
       nama: json['nama'] ?? '',
       deskripsi: json['deskripsi'] ?? '',
-      status: json['status'] ?? 'Rencana',
+      status: _prettyStatus(json['status'] ?? 'perencanaan'),
       tanggalMulai: DateTime.parse(json['tanggal_mulai'] ?? DateTime.now().toIso8601String()),
       tanggalSelesai: DateTime.parse(json['tanggal_selesai'] ?? DateTime.now().toIso8601String()),
       progress: json['progress'] ?? 0,
     );
+  }
+
+  static String _prettyStatus(String status) {
+    switch (status.toString().toLowerCase()) {
+      case 'selesai':
+        return 'Selesai';
+      case 'berjalan':
+        return 'Berjalan';
+      case 'perencanaan':
+      case 'rencana':
+        return 'Perencanaan';
+      default:
+        return status.toString();
+    }
+  }
+
+  static String _dbStatus(String status) {
+    switch (status.toString().toLowerCase()) {
+      case 'selesai':
+        return 'SELESAI';
+      case 'berjalan':
+        return 'BERJALAN';
+      case 'perencanaan':
+      case 'rencana':
+        return 'PERENCANAAN';
+      default:
+        return status.toString().toUpperCase();
+    }
   }
 
   Map<String, dynamic> toJson() {
@@ -173,10 +201,9 @@ class ProgramKerja {
       'sekbid_id': sekbidId,
       'nama': nama,
       'deskripsi': deskripsi,
-      'status': status,
+      'status': _dbStatus(status),
       'tanggal_mulai': tanggalMulai.toIso8601String(),
       'tanggal_selesai': tanggalSelesai.toIso8601String(),
-      'progress': progress,
     };
   }
-}
+}
