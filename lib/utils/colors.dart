@@ -10,10 +10,10 @@ class AppColors {
   static const Color secondaryDark = Color(0xFFD6D1C4); 
 
   // ── 60% WARNA DOMINAN (Background / Area Besar) ────────
-  static const Color bg = Color(0xFFFDFCFB); // Warm Snow White
-  static const Color surface = Color(0xFFFFFFFF); // Pure White Cards
-  static const Color surfaceGlass = Color(0xDDFFFFFF); 
-  static const Color surfaceVariant = Color(0xFFF2EEE7); // Slightly more contrast against bg
+  static const Color bg = Color(0xFFE8E0D4); // Warm Brownish Cream
+  static const Color surface = Color(0xFFFAF7F2); // Soft Warm White Cards
+  static const Color surfaceGlass = Color(0xDDFAF7F2); 
+  static const Color surfaceVariant = Color(0xFFEDE7DC); // Slightly more contrast against bg
 
   // ── Typography Colors ──────────────────────────────────
   static const Color textPrimary = Color(0xFF261D17); // Darker Espresso

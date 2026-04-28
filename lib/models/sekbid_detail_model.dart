@@ -142,6 +142,7 @@ class ProgramKerja {
   final DateTime tanggalMulai;
   final DateTime tanggalSelesai;
   final int progress; // 0-100
+  final String? dokumentasi; // URL foto/dokumentasi
 
   ProgramKerja({
     this.id,
@@ -152,6 +153,7 @@ class ProgramKerja {
     required this.tanggalMulai,
     required this.tanggalSelesai,
     required this.progress,
+    this.dokumentasi,
   });
 
   factory ProgramKerja.fromJson(Map<String, dynamic> json) {
@@ -164,6 +166,7 @@ class ProgramKerja {
       tanggalMulai: DateTime.parse(json['tanggal_mulai'] ?? DateTime.now().toIso8601String()),
       tanggalSelesai: DateTime.parse(json['tanggal_selesai'] ?? DateTime.now().toIso8601String()),
       progress: json['progress'] ?? 0,
+      dokumentasi: json['gambar_url'],
     );
   }
 
@@ -204,6 +207,7 @@ class ProgramKerja {
       'status': _dbStatus(status),
       'tanggal_mulai': tanggalMulai.toIso8601String(),
       'tanggal_selesai': tanggalSelesai.toIso8601String(),
+      if (dokumentasi != null) 'gambar_url': dokumentasi,
     };
   }
 }

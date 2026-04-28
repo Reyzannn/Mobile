@@ -5,7 +5,6 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/sekbid_model.dart';
 import '../models/sekbid_detail_model.dart';
 import '../utils/colors.dart';
-import 'detail_proker_screen.dart';
 import 'kelola_proker_screen.dart';
 
 class SekbidDetailScreen extends StatefulWidget {
@@ -36,7 +35,15 @@ class _SekbidDetailScreenState extends State<SekbidDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    final bool hasPreviousRoute = ModalRoute.of(context)?.canPop ?? false;
+    
+    return PopScope(
+      canPop: hasPreviousRoute,
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) return;
+        Navigator.pushReplacementNamed(context, '/sekbid');
+      },
+      child: Scaffold(
       backgroundColor: AppColors.bg,
       extendBodyBehindAppBar: true,
       appBar: AppBar(
@@ -46,7 +53,17 @@ class _SekbidDetailScreenState extends State<SekbidDetailScreen> {
               filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
               child: Container(color: AppColors.bg.withValues(alpha: 0.5))),
         ),
-        title: Text('Sekbid ${widget.sekbid.id}'),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.black87),
+          onPressed: () {
+            if (hasPreviousRoute) {
+              Navigator.pop(context);
+            } else {
+              Navigator.pushReplacementNamed(context, '/sekbid');
+            }
+          },
+        ),
+        title: Text('Sekbid ${widget.sekbid.id}', style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.black87)),
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () async {
@@ -153,6 +170,12 @@ class _SekbidDetailScreenState extends State<SekbidDetailScreen> {
                   ),
                   const SizedBox(height: 32),
 
+                  // Dokumentasi: Program Kerja Section
+                  // Section ini menampilkan daftar semua program kerja yang terdaftar
+                  // di SEKBID ini. Setiap program dapat:
+                  // - Diklik untuk melihat detail lengkap (nama, deskripsi, status, tanggal)
+                  // - Diubah statusnya (Perencanaan, Berjalan, Selesai)
+                  // - Dilacak progress-nya melalui progress bar
                   Text('Programs',
                       style: GoogleFonts.outfit(
                           fontSize: 18,
@@ -205,19 +228,47 @@ class _SekbidDetailScreenState extends State<SekbidDetailScreen> {
           ),
         ],
       ),
+      ),
     );
   }
 }
 
-class _ProkerCard extends StatelessWidget {
+class _ProkerCard extends StatefulWidget {
   final ProgramKerja p;
   final Sekbid sekbid;
   final SekbidDetail sekbidDetail;
   const _ProkerCard(this.p, this.sekbid, this.sekbidDetail);
 
-  Color get _color => p.status.toLowerCase() == 'selesai'
+  @override
+  State<_ProkerCard> createState() => _ProkerCardState();
+}
+
+class _ProkerCardState extends State<_ProkerCard> with SingleTickerProviderStateMixin {
+  bool _isExpanded = false;
+  late AnimationController _animationController;
+
+  @override
+  void initState() {
+    super.initState();
+    _animationController = AnimationController(
+      duration: const Duration(milliseconds: 300),
+      vsync: this,
+    );
+  }
+
+  @override
+  void dispose() {
+    _animationController.dispose();
+    super.dispose();
+  }
+
+  Color get _color => widget.p.status.toLowerCase() == 'selesai'
       ? AppColors.success
-      : (p.status.toLowerCase() == 'berjalan' ? AppColors.warning : AppColors.primaryLight);
+      : (widget.p.status.toLowerCase() == 'berjalan' ? AppColors.warning : AppColors.primaryLight);
+
+  String _formatDate(DateTime date) {
+    return '${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year}';
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -236,65 +287,224 @@ class _ProkerCard extends StatelessWidget {
       ),
       child: Material(
         color: Colors.transparent,
-        child: InkWell(
-          borderRadius: BorderRadius.circular(24),
-          onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (_) => DetailProkerScreen(
-                  programKerja: p,
-                  sekbid: sekbid,
-                  sekbidDetail: sekbidDetail,
-                ),
-              ),
-            );
-          },
-          child: Padding(
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
+        child: Column(
+          children: [
+            InkWell(
+              borderRadius: BorderRadius.circular(24),
+              onTap: () {
+                setState(() {
+                  _isExpanded = !_isExpanded;
+                });
+                if (_isExpanded) {
+                  _animationController.forward();
+                } else {
+                  _animationController.reverse();
+                }
+              },
+              child: Padding(
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Expanded(
-                        child: Text(p.nama,
-                            style: GoogleFonts.outfit(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w700,
-                                color: AppColors.textPrimary))),
-                    Container(
-                      padding:
-                          const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                      decoration: BoxDecoration(
-                          color: _color.withValues(alpha: 0.15),
-                          borderRadius: BorderRadius.circular(12)),
-                      child: Text(p.status,
-                          style: GoogleFonts.outfit(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w700,
-                              color: _color)),
+                    Row(
+                      children: [
+                        Expanded(
+                            child: Text(widget.p.nama,
+                                style: GoogleFonts.outfit(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w700,
+                                    color: AppColors.textPrimary))),
+                        Container(
+                          padding:
+                              const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                          decoration: BoxDecoration(
+                              color: _color.withValues(alpha: 0.15),
+                              borderRadius: BorderRadius.circular(12)),
+                          child: Text(widget.p.status,
+                              style: GoogleFonts.outfit(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w700,
+                                  color: _color)),
+                        ),
+                        const SizedBox(width: 12),
+                        RotationTransition(
+                          turns: Tween(begin: 0.0, end: 0.5).animate(_animationController),
+                          child: Icon(
+                            Icons.expand_more,
+                            color: AppColors.textMuted,
+                          ),
+                        ),
+                      ],
                     ),
+                    const SizedBox(height: 8),
+                    Text(widget.p.deskripsi,
+                        style: GoogleFonts.outfit(
+                            fontSize: 14, color: AppColors.textSecondary)),
+                    if (widget.p.status.toLowerCase() == 'berjalan' || widget.p.progress > 0) ...[
+                      const SizedBox(height: 16),
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(8),
+                        child: LinearProgressIndicator(
+                            value: widget.p.progress / 100,
+                            backgroundColor: AppColors.primary.withValues(alpha: 0.1),
+                            color: _color,
+                            minHeight: 6),
+                      ),
+                    ],
                   ],
                 ),
-                const SizedBox(height: 8),
-                Text(p.deskripsi,
-                    style: GoogleFonts.outfit(
-                        fontSize: 14, color: AppColors.textSecondary)),
-                if (p.status.toLowerCase() == 'berjalan' || p.progress > 0) ...[
-                  const SizedBox(height: 16),
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(8),
-                    child: LinearProgressIndicator(
-                        value: p.progress / 100,
-                        backgroundColor: AppColors.primary.withValues(alpha: 0.1),
-                        color: _color,
-                        minHeight: 6),
-                  ),
-                ],
-              ],
+              ),
             ),
-          ),
+            // Detail Container (Expandable)
+            if (_isExpanded) ...[
+              Container(
+                decoration: BoxDecoration(
+                  border: Border(
+                    top: BorderSide(color: AppColors.border.withValues(alpha: 0.5)),
+                  ),
+                ),
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // ── Foto Dokumentasi (di atas, full-width) ──────────────
+                    if (widget.p.dokumentasi != null && widget.p.dokumentasi!.isNotEmpty) ...[
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(16),
+                        child: Image.network(
+                          widget.p.dokumentasi!,
+                          height: 180,
+                          width: double.infinity,
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) {
+                            return Container(
+                              height: 100,
+                              decoration: BoxDecoration(
+                                color: AppColors.surfaceVariant.withValues(alpha: 0.5),
+                                borderRadius: BorderRadius.circular(16),
+                              ),
+                              child: Center(
+                                child: Icon(
+                                  Icons.image_not_supported_rounded,
+                                  color: AppColors.textMuted,
+                                  size: 36,
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                    ],
+
+                    // ── Tanggal Mulai & Selesai (kiri-kanan) ───────────────
+                    Row(
+                      children: [
+                        // Tanggal Mulai (kiri)
+                        Expanded(
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                            decoration: BoxDecoration(
+                              color: AppColors.primary.withValues(alpha: 0.07),
+                              borderRadius: BorderRadius.circular(14),
+                            ),
+                            child: Row(
+                              children: [
+                                Icon(Icons.calendar_today_rounded,
+                                    color: AppColors.primary, size: 16),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text('Mulai',
+                                          style: GoogleFonts.outfit(
+                                              fontSize: 10,
+                                              fontWeight: FontWeight.w600,
+                                              color: AppColors.textMuted)),
+                                      Text(_formatDate(widget.p.tanggalMulai),
+                                          style: GoogleFonts.outfit(
+                                              fontSize: 12,
+                                              fontWeight: FontWeight.w700,
+                                              color: AppColors.textPrimary)),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        // Tanggal Selesai (kanan)
+                        Expanded(
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                            decoration: BoxDecoration(
+                              color: _color.withValues(alpha: 0.07),
+                              borderRadius: BorderRadius.circular(14),
+                            ),
+                            child: Row(
+                              children: [
+                                Icon(Icons.event_available_rounded,
+                                    color: _color, size: 16),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text('Selesai',
+                                          style: GoogleFonts.outfit(
+                                              fontSize: 10,
+                                              fontWeight: FontWeight.w600,
+                                              color: AppColors.textMuted)),
+                                      Text(_formatDate(widget.p.tanggalSelesai),
+                                          style: GoogleFonts.outfit(
+                                              fontSize: 12,
+                                              fontWeight: FontWeight.w700,
+                                              color: AppColors.textPrimary)),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+
+                    // ── Progress (jika ada) ─────────────────────────────────
+                    if (widget.p.progress > 0) ...[
+                      const SizedBox(height: 14),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text('Progress',
+                              style: GoogleFonts.outfit(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w600,
+                                  color: AppColors.textMuted)),
+                          Text('${widget.p.progress}%',
+                              style: GoogleFonts.outfit(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w700,
+                                  color: _color)),
+                        ],
+                      ),
+                      const SizedBox(height: 6),
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(8),
+                        child: LinearProgressIndicator(
+                            value: widget.p.progress / 100,
+                            backgroundColor: AppColors.primary.withValues(alpha: 0.1),
+                            color: _color,
+                            minHeight: 8),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            ],
+          ],
         ),
       ),
     );
